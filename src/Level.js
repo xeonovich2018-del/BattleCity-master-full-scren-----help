@@ -59,6 +59,7 @@ function Level(sceneManager, stageNumber, player) {
   this._shovelHandler.setBaseWallBuilder(baseWallBuilder);
   
   this._pause = new Pause(this._eventManager);
+  this._pause.setActive(false);   // ← Теперь пауза выключена на время заставки
   
   this._player = player === undefined ? new Player() : player;
   this._player.setEventManager(this._eventManager);
@@ -108,6 +109,11 @@ Level.prototype.draw = function (ctx) {
 
 Level.prototype.show = function () {
   this._visible = true;
+};
+
+// Новый метод — пауза включается только после завершения заставки
+Level.prototype.start = function () {
+  this._pause.setActive(true);
 };
 
 Level.prototype.notify = function (event) {

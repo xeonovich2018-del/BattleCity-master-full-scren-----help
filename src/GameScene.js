@@ -25,6 +25,7 @@ function GameScene(sceneManager, stage, player) {
   this._script.enqueue({update: function () {
     self._curtain.rise();
     if (self._curtain.isRisen()) {
+      self._level.start();  // ← Активируем паузу ТОЛЬКО здесь
       self._script.actionCompleted();
     }
   }});
