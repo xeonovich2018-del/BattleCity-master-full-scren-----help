@@ -10,7 +10,7 @@ function MainMenuScene(sceneManager) {
   this._mainMenu.setItems([
     new OnePlayerMenuItem(this._sceneManager),
     new ConstructionMenuItem(this._sceneManager),
-    new ControlsMenuItem(this._sceneManager)   // Controls меню
+    new ControlsMenuItem(this._sceneManager)
   ]);
   
   this._mainMenuController = new MainMenuController(this._eventManager, this._mainMenu);
@@ -55,6 +55,10 @@ MainMenuScene.prototype.update = function () {
 };
 
 MainMenuScene.prototype.draw = function (ctx) {
+  // === ТОЛЬКО ШРИФТ И ЦВЕТ — без textBaseline, чтобы пункты меню не смещались ===
+  ctx.font = "16px prstart";
+  ctx.fillStyle = "#ffffff";
+
   this._clearCanvas(ctx);
   ctx.drawImage(ImageManager.getImage('battle_city'), 56, this._y + 80);
   
@@ -103,20 +107,15 @@ MainMenuScene.prototype._clearCanvas = function (ctx) {
   ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 };
 
-// ====================== НОВЫЙ ПУНКТ МЕНЮ "CONTROLS" ======================
-
+// ====================== ПУНКТ МЕНЮ "CONTROLS" ======================
 function ControlsMenuItem(sceneManager) {
-    this._sceneManager = sceneManager;
+  this._sceneManager = sceneManager;
 }
 
 ControlsMenuItem.prototype.getName = function() {
-    return "CONTROLS";
+  return "CONTROLS";
 };
 
 ControlsMenuItem.prototype.execute = function() {
-    if (typeof ControlsMenu !== "undefined" && typeof ControlsMenu.show === "function") {
-        ControlsMenu.show();
-    } else {
-        console.error("ControlsMenu не найден. Убедись, что файл ControlsMenu.js подключён.");
-    }
+  this._sceneManager.toControlsScene();
 };

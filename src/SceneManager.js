@@ -36,6 +36,12 @@ SceneManager.prototype.toConstructionScene = function () {
   this._scene = new Construction(this);
 };
 
+// === НОВЫЙ МЕТОД ДЛЯ ЭКРАНА CONTROLS ===
+SceneManager.prototype.toControlsScene = function () {
+  this._eventManager.removeAllSubscribers();
+  this._scene = new ControlsScene(this);
+};
+
 SceneManager.prototype.toStageStatisticsScene = function (stage, player, gameOver) {
   this._eventManager.removeAllSubscribers();
   this._scene = new StageStatisticsScene(this, stage, player, gameOver);
