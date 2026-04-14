@@ -1,43 +1,28 @@
-function CollisionDetector(eventManager, bounds, spriteContainer) {
+function CollisionDetector(sprites, eventManager) {
+  this._sprites = sprites;
   this._eventManager = eventManager;
-  this._eventManager.addSubscriber(this, [Sprite.Event.MOVED]);
-  this._bounds = bounds;
-  this._spriteContainer = spriteContainer;
 }
 
-CollisionDetector.Event = {};
-CollisionDetector.Event.COLLISION = 'CollisionDetector.Event.COLLISION';
-CollisionDetector.Event.OUT_OF_BOUNDS = 'CollisionDetector.Event.OUT_OF_BOUNDS';
-
-CollisionDetector.prototype.notify = function (event) {
-  SpriteContainer.prototype.notify.call(this, event);
-  
-  if (event.name == Sprite.Event.MOVED) {
-    this._detectCollisionsForSprite(event.sprite);
-    this._detectOutOfBoundsForSprite(event.sprite);
-  }
+CollisionDetector.Event = {
+  COLLISION: 'CollisionDetector.Event.COLLISION',
+  OUT_OF_BOUNDS: 'CollisionDetector.Event.OUT_OF_BOUNDS'
 };
 
-CollisionDetector.prototype._detectCollisionsForSprite = function (sprite) {
-  var sprites = this._spriteContainer.getSprites();
-  sprites.forEach(function (other) {
-    if (sprite === other) {
-      return;
+CollisionDetector.prototype.detectCollisions = function () {
+  var sprites = this._sprites;
+  for (var i = 0; i < sprites.length; i++) {
+    for (var j = i + 1; j < sprites.length; j++) {
+      var s1 = sprites[i];
+      var s2 = sprites[j];
+      if (s1 && s2 && !s1.isDestroyed && !s2.isDestroyed && s1.intersects && s1.intersects(s2)) {
+        if (this._eventManager) {
+          this._eventManager.fireEvent({
+            name: CollisionDetector.Event.COLLISION,
+            initiator: s1,
+            sprite: s2
+          });
+        }
+      }
     }
-    if (sprite.intersects(other)) {
-      this._eventManager.fireEvent({
-        'name': CollisionDetector.Event.COLLISION,
-        'initiator': sprite,
-        'sprite': other});
-    }
-  }, this);
-};
-
-CollisionDetector.prototype._detectOutOfBoundsForSprite = function (sprite) {
-  if (!this._bounds.containsWhole(sprite)) {
-    this._eventManager.fireEvent({
-        'name': CollisionDetector.Event.OUT_OF_BOUNDS,
-        'sprite': sprite,
-        'bounds': this._bounds});
   }
 };

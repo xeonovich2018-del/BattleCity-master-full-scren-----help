@@ -1,36 +1,30 @@
 function AITankControllerContainer(eventManager) {
   this._eventManager = eventManager;
-  eventManager.addSubscriber(this, [AITankController.Event.CREATED, AITankController.Event.DESTROYED]);
   this._controllers = [];
+
+  // Подписываемся только после того, как Tank уже создан
+  this._eventManager.addSubscriber(this, [Tank.Event.CREATED]);
 }
 
-AITankControllerContainer.prototype.addController = function (controller) {
-  this._controllers.push(controller);
-};
-
-AITankControllerContainer.prototype.removeController = function (controller) {
-  arrayRemove(this._controllers, controller);
-};
-
-AITankControllerContainer.prototype.containsController = function (controller) {
-  return arrayContains(this._controllers, controller);
-};
-
-AITankControllerContainer.prototype.getControllers = function () {
-  return this._controllers;
-};
-
 AITankControllerContainer.prototype.notify = function (event) {
-  if (event.name == AITankController.Event.CREATED) {
-    this.addController(event.controller);
-  }
-  else if (event.name == AITankController.Event.DESTROYED) {
-    this.removeController(event.controller);
+  if (event.name === Tank.Event.CREATED && event.tank && event.tank.isEnemy()) {
+    var controller = new AITankController(this._eventManager, event.tank);
+    this._controllers.push(controller);
   }
 };
 
 AITankControllerContainer.prototype.update = function () {
-  this._controllers.forEach(function (controller) {
-    controller.update();
-  });
+  for (var i = 0; i < this._controllers.length; i++) {
+    if (this._controllers[i]) {
+      this._controllers[i].update();
+    }
+  }
+};
+
+AITankControllerContainer.prototype.removeDestroyed = function () {
+  for (var i = this._controllers.length - 1; i >= 0; i--) {
+    if (!this._controllers[i] || !this._controllers[i]._active) {
+      this._controllers.splice(i, 1);
+    }
+  }
 };

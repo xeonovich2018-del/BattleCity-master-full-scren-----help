@@ -1,64 +1,28 @@
-function SpriteContainer(eventManager) {
-  this._eventManager = eventManager;
-  eventManager.addSubscriber(this, [Sprite.Event.CREATED, Sprite.Event.DESTROYED]);
+function SpriteContainer() {
   this._sprites = [];
 }
 
-SpriteContainer.prototype.addSprite = function (sprite) {
-  this._sprites.push(sprite);
-  this._sortSpritesByZIndex();
+SpriteContainer.prototype.add = function (sprite) {
+  if (sprite) this._sprites.push(sprite);
 };
 
-SpriteContainer.prototype.removeSprite = function (sprite) {
-  arrayRemove(this._sprites, sprite);
+SpriteContainer.prototype.remove = function (sprite) {
+  var index = this._sprites.indexOf(sprite);
+  if (index > -1) this._sprites.splice(index, 1);
 };
 
-SpriteContainer.prototype.containsSprite = function (sprite) {
-  return arrayContains(this._sprites, sprite);
-};
-
-SpriteContainer.prototype.getSprites = function () {
-  return this._sprites;
-};
-
-SpriteContainer.prototype.getEnemyTanks = function () {
-  return this._sprites.filter(function (sprite) {
-    return sprite instanceof Tank && sprite.isEnemy();
-  });
-};
-
-SpriteContainer.prototype.getWalls = function () {
-  return this._sprites.filter(function (sprite) {
-    return sprite instanceof Wall;
-  });
-};
-
-SpriteContainer.prototype.getBase = function () {
-  for (var i = 0; i < this._sprites.length; ++i) {
-    if (this._sprites[i] instanceof Base) {
-      return this._sprites[i];
-    }
-  }
-  return null;
-};
-
-SpriteContainer.prototype.notify = function (event) {
-  if (event.name == Sprite.Event.CREATED) {
-    this.addSprite(event.sprite);
-  }
-  else if (event.name == Sprite.Event.DESTROYED) {
-    this.removeSprite(event.sprite);
+SpriteContainer.prototype.update = function () {
+  for (var i = 0; i < this._sprites.length; i++) {
+    if (this._sprites[i]) this._sprites[i].update();
   }
 };
 
-SpriteContainer.prototype._sortSpritesByZIndex = function () {
-  this._sprites.sort(function (a, b) {
-    if (a.getZIndex() < b.getZIndex()) {
-      return -1;
-    }
-    if (a.getZIndex() > b.getZIndex()) {
-      return 1;
-    }
-    return 0;
-  });
+SpriteContainer.prototype.draw = function (ctx) {
+  for (var i = 0; i < this._sprites.length; i++) {
+    if (this._sprites[i]) this._sprites[i].draw(ctx);
+  }
+};
+
+SpriteContainer.prototype.clear = function () {
+  this._sprites = [];
 };
