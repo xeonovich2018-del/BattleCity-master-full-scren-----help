@@ -20,6 +20,11 @@
   <script type="text/javascript" src="src/SpriteController.js"></script>
   <script type="text/javascript" src="src/TankController.js"></script>
   <script type="text/javascript" src="src/Keyboard.js"></script>
+  
+  <!-- === Наши новые файлы для настраиваемых клавиш === -->
+  <script type="text/javascript" src="src/Controls.js"></script>
+  <script type="text/javascript" src="src/ControlsMenu.js"></script>
+
   <script type="text/javascript" src="src/BulletFactory.js"></script>
   <script type="text/javascript" src="src/Bullet.js"></script>
   <script type="text/javascript" src="src/Painter.js"></script>
@@ -79,7 +84,6 @@
   <script type="text/javascript" src="src/Level.js"></script>
   <script type="text/javascript" src="src/EnemyFactoryView.js"></script>
   <script type="text/javascript" src="src/LivesView.js"></script>
-  <script type="text/javascript" src="src/MainMenuView.js"></script>
   <script type="text/javascript" src="src/Curtain.js"></script>
   <script type="text/javascript" src="src/Script.js"></script>
   <script type="text/javascript" src="src/Delay.js"></script>
@@ -115,6 +119,12 @@
       
       var eventManager = new EventManager();
       var keyboard = new Keyboard(eventManager);
+      
+      // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+      // Инициализация настраиваемых клавиш
+      Controls.init();
+      // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
       var sceneManager = new SceneManager(eventManager);
       sceneManager.toLoadingScene();
       
@@ -164,6 +174,5 @@
 
 <body>
   <div id="main"></div>
-  <script src="src/ControlsMenu.js"></script>
 </body>
 </html>

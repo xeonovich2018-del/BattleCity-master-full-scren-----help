@@ -1,82 +1,74 @@
 // src/ControlsMenu.js
-const ControlsMenu = {
-    bindings: {
-        up:    'ArrowUp',
-        down:  'ArrowDown',
-        left:  'ArrowLeft',
-        right: 'ArrowRight',
-        fire:  'Space',
-        pause: 'KeyP'
-    },
+// Меню настройки клавиш
 
-    show: function() {
-        const mainMenu = document.getElementById('menu');
-        if (mainMenu) mainMenu.style.display = 'none';
+var ControlsMenu = {};
 
-        const div = document.createElement('div');
-        div.id = 'controls-menu';
-        div.style.cssText = `
-            position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-            background:rgba(0,0,0,0.95); border:6px solid #ffff00; padding:40px 80px;
-            color:#fff; font-family:Courier New,monospace; font-size:26px; z-index:9999;
-            min-width:500px; text-align:left;
-        `;
+ControlsMenu.show = function() {
+    if (document.getElementById('controls-menu')) return;
 
-        let html = `<h2 style="color:#ffff00;text-align:center;margin-bottom:30px;">CONTROLS</h2>`;
+    var menu = document.createElement('div');
+    menu.id = 'controls-menu';
+    menu.style.cssText = `
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.95); color: #ff0; padding: 30px; border: 5px solid #ff0;
+        font-family: monospace; font-size: 18px; text-align: center; z-index: 10000;
+        min-width: 420px; border-radius: 8px;
+    `;
 
-        Object.keys(this.bindings).forEach(action => {
-            const name = action.charAt(0).toUpperCase() + action.slice(1);
-            html += `
-                <div style="margin:15px 0;cursor:pointer;" onclick="ControlsMenu.startBind('${action}')">
-                    ${name.padEnd(8)} : <span id="bind-${action}" style="color:#00ff00;">${this.bindings[action]}</span>
-                </div>`;
-        });
+    menu.innerHTML = `
+        <h2 style="margin: 0 0 20px 0; color:#ff0;">НАСТРОЙКА УПРАВЛЕНИЯ</h2>
+        <p style="margin-bottom: 20px;">Кликни по действию и нажми новую клавишу</p>
+        <div id="menu-list" style="text-align:left; display:inline-block;"></div>
+        <div style="margin-top:25px;">
+            <button id="reset-btn" style="padding:8px 16px; margin:5px;">Сбросить на стандартные</button>
+            <button id="close-btn" style="padding:8px 16px; margin:5px;">Закрыть (P)</button>
+        </div>
+    `;
 
-        html += `<br><div style="text-align:center;margin-top:40px;color:#ff5555;cursor:pointer;" onclick="ControlsMenu.close()">← BACK</div>`;
+    document.body.appendChild(menu);
 
-        div.innerHTML = html;
-        document.body.appendChild(div);
-    },
+    var list = document.getElementById('menu-list');
 
-    startBind: function(key) {
-        this.currentBinding = key;
-        const span = document.getElementById(`bind-${key}`);
-        if (span) span.innerHTML = '[PRESS ANY KEY]';
-    },
-
-    handleKey: function(e) {
-        if (!this.currentBinding) return;
-        if (e.code === 'Escape') {
-            this.currentBinding = null;
-            return;
-        }
-        this.bindings[this.currentBinding] = e.code;
-        this.currentBinding = null;
-        this.refresh();
-    },
-
-    refresh: function() {
-        const old = document.getElementById('controls-menu');
-        if (old) old.remove();
-        this.show();
-    },
-
-    close: function() {
-        const menu = document.getElementById('controls-menu');
-        if (menu) menu.remove();
-        const mainMenu = document.getElementById('menu');
-        if (mainMenu) mainMenu.style.display = 'block';
-    },
-
-    getKey: function(action) {
-        return this.bindings[action];
+    function addRow(label, action) {
+        var currentKey = Controls.getKey(action);
+        var row = document.createElement('div');
+        row.style.cssText = 'margin:12px 0; cursor:pointer; padding:6px;';
+        row.innerHTML = `<strong>${label}:</strong> <span style="background:#222; padding:6px 14px;">${Controls.getKeyName(currentKey)}</span>`;
+        
+        row.onclick = function() {
+            var span = row.querySelector('span');
+            span.textContent = 'Нажми клавишу...';
+            
+            var temp = function(e) {
+                Controls.current[action] = e.which;
+                Controls.save();
+                span.textContent = Controls.getKeyName(e.which);
+                document.removeEventListener('keydown', temp);
+            };
+            document.addEventListener('keydown', temp);
+        };
+        list.appendChild(row);
     }
+
+    addRow('Вверх',    'up');
+    addRow('Вниз',     'down');
+    addRow('Влево',    'left');
+    addRow('Вправо',   'right');
+    addRow('Выстрел',  'fire');
+
+    document.getElementById('reset-btn').onclick = function() {
+        Object.assign(Controls.current, Controls.DEFAULT);
+        Controls.save();
+        menu.remove();
+        ControlsMenu.show();
+    };
+
+    document.getElementById('close-btn').onclick = function() {
+        menu.remove();
+    };
 };
 
-window.ControlsMenu = ControlsMenu;
-
-document.addEventListener('keydown', e => {
-    if (document.getElementById('controls-menu')) {
-        ControlsMenu.handleKey(e);
-    }
-});
+// Глобальная функция для вызова из TankController
+ControlsMenu.getKey = function(action) {
+    return Controls.getKey(action);
+};

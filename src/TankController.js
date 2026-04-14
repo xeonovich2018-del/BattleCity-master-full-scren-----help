@@ -20,18 +20,19 @@ TankController.prototype.keyPressed = function (key) {
     return;
   }
 
-  // === Стрельба ===
+  // === Выстрел ===
   if (key === ControlsMenu.getKey('fire') || key === Keyboard.Key.SPACE) {
     this._sprite.shoot();
-    return;                    // важно: не передаём дальше, чтобы не было двойного срабатывания
+    return;
   }
 
-  // === Пауза ===
-  if (key === ControlsMenu.getKey('pause')) {
+  // === Пауза / Меню настроек ===
+  if (key === ControlsMenu.getKey('pause') || key === 80) {   // 80 = P
+    ControlsMenu.show();
     if (typeof togglePause === 'function') togglePause();
     return;
   }
 
-  // === Движение (передаём в SpriteController) ===
+  // === Движение (передаём дальше в SpriteController) ===
   SpriteController.prototype.keyPressed.call(this, key);
 };
