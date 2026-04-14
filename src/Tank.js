@@ -36,7 +36,15 @@ function Tank(eventManager) {
   // turn smoothing sensitivity
   this._turnSmoothSens = Globals.TILE_SIZE - 1;
   this._turnRoundTo = Globals.TILE_SIZE;
-  
+
+  // ====================== УПРАВЛЕНИЕ ======================
+  this._direction = Sprite.Direction.UP;
+  this._prevDirection = Sprite.Direction.UP;
+  this._moving = false;
+  this._turn = false;
+  this._speed = 0;                    // ← важно
+  // =======================================================
+
   this._eventManager.fireEvent({'name': Tank.Event.CREATED, 'tank': this});
 }
 
@@ -126,15 +134,9 @@ Tank.prototype.setBulletType = function (type) {
 };
   
 Tank.prototype.shoot = function () {
-  if (this.isDestroyed()) {
-    return;
-  }
-  if (!this._state.canShoot()) {
-    return;
-  }
-  if (this._bullets >= this._bulletsLimit) {
-    return;
-  }
+  if (this.isDestroyed()) return;
+  if (!this._state.canShoot()) return;
+  if (this._bullets >= this._bulletsLimit) return;
   this._bullets++;
   this._eventManager.fireEvent({'name': Tank.Event.SHOOT, 'tank': this});
 };
@@ -144,9 +146,7 @@ Tank.prototype.updateHook = function () {
 };
 
 Tank.prototype.updateColor = function () {
-  if (this.isFlashing() && this._hit == 0) {
-    return;
-  }
+  if (this.isFlashing() && this._hit == 0) return;
   this._color.update();
 };
 
@@ -211,7 +211,7 @@ Tank.prototype.getTurnRoundTo = function () {
 };
 
 Tank.prototype.move = function () {
-  if (!this._state.canMove()) {
+  if (!this._state.canMove() || !this._moving) {
     return;
   }
   if (this._turn) {
@@ -289,32 +289,60 @@ Tank.prototype._smoothTurn = function () {
   if (this._direction == Sprite.Direction.UP || this._direction == Sprite.Direction.DOWN) {
     if (this._prevDirection == Sprite.Direction.RIGHT) {
       val = this._turnRoundTo - (this._x % this._turnRoundTo);
-      if (val < this._turnSmoothSens) {
-        this._x += val;
-      }
+      if (val < this._turnSmoothSens) this._x += val;
     }
     else if (this._prevDirection == Sprite.Direction.LEFT) {
       val = this._x % this._turnRoundTo;
-      if (val < this._turnSmoothSens) {
-        this._x -= val;
-      }
+      if (val < this._turnSmoothSens) this._x -= val;
     }
   }
   else {
     if (this._prevDirection == Sprite.Direction.DOWN) {
       val = this._turnRoundTo - (this._y % this._turnRoundTo);
-      if (val < this._turnSmoothSens) {
-        this._y += val;
-      }
+      if (val < this._turnSmoothSens) this._y += val;
     }
     else if (this._prevDirection == Sprite.Direction.UP) {
       val = this._y % this._turnRoundTo;
-      if (val < this._turnSmoothSens) {
-        this._y -= val;
-      }
+      if (val < this._turnSmoothSens) this._y -= val;
     }
   }
 };
+
+// ====================== ИСПРАВЛЕННЫЕ МЕТОДЫ ДВИЖЕНИЯ ======================
+Tank.prototype.turnUp = function () {
+  this._prevDirection = this._direction;
+  this._direction = Sprite.Direction.UP;
+  this._turn = true;
+};
+
+Tank.prototype.turnDown = function () {
+  this._prevDirection = this._direction;
+  this._direction = Sprite.Direction.DOWN;
+  this._turn = true;
+};
+
+Tank.prototype.turnLeft = function () {
+  this._prevDirection = this._direction;
+  this._direction = Sprite.Direction.LEFT;
+  this._turn = true;
+};
+
+Tank.prototype.turnRight = function () {
+  this._prevDirection = this._direction;
+  this._direction = Sprite.Direction.RIGHT;
+  this._turn = true;
+};
+
+Tank.prototype.startMoving = function () {
+  this._moving = true;
+  this._speed = this._normalSpeed;        // ← ГЛАВНЫЙ ФИКС
+};
+
+Tank.prototype.stopMoving = function () {
+  this._moving = false;
+  this._speed = 0;                        // ← ГЛАВНЫЙ ФИКС
+};
+// =========================================================================
 
 Tank.prototype.draw = function (ctx) {
   this._state.draw(ctx);
@@ -349,21 +377,13 @@ Tank.prototype.setCollisionResolvingMoveLimit = function (limit) {
 
 Tank.prototype.upgrade = function () {
   this._upgradeLevel++;
-  
   if (this._upgradeLevel > 3) {
     this._upgradeLevel = 3;
     return;
   }
-  
-  if (this._upgradeLevel == 1) {
-    this._bulletSpeed = Bullet.Speed.FAST;
-  }
-  else if (this._upgradeLevel == 2) {
-    this._bulletsLimit = 2;
-  }
-  else if (this._upgradeLevel == 3) {
-    this._bulletType = Bullet.Type.ENHANCED;
-  }
+  if (this._upgradeLevel == 1) this._bulletSpeed = Bullet.Speed.FAST;
+  else if (this._upgradeLevel == 2) this._bulletsLimit = 2;
+  else if (this._upgradeLevel == 3) this._bulletType = Bullet.Type.ENHANCED;
 };
 
 Tank.prototype.getUpgradeLevel = function () {
@@ -371,22 +391,12 @@ Tank.prototype.getUpgradeLevel = function () {
 };
 
 Tank.prototype._bulletCollision = function (event) {
-  if (event.name != CollisionDetector.Event.COLLISION) {
-    return false;
-  }
-  if (!(event.initiator instanceof Bullet)) {
-    return false;
-  }
-  if (event.sprite !== this) {
-    return false;
-  }
+  if (event.name != CollisionDetector.Event.COLLISION) return false;
+  if (!(event.initiator instanceof Bullet)) return false;
+  if (event.sprite !== this) return false;
   var otherTank = event.initiator.getTank();
-  if (otherTank === this) {
-    return false;
-  }
-  if (this.isEnemy() && otherTank.isEnemy()) {
-    return false;
-  }
+  if (otherTank === this) return false;
+  if (this.isEnemy() && otherTank.isEnemy()) return false;
   return true;
 };
 

@@ -1,10 +1,16 @@
 function OnePlayerMenuItem(sceneManager) {
-  MainMenuItem.call(this, sceneManager);
-  this.setName("1 PLAYER");
+  this._sceneManager = sceneManager;
 }
 
-OnePlayerMenuItem.subclass(MainMenuItem);
+OnePlayerMenuItem.prototype.getName = function() {
+  return "1 PLAYER";
+};
 
-OnePlayerMenuItem.prototype.execute = function () {
-  this._sceneManager.toGameScene();
+OnePlayerMenuItem.prototype.execute = function() {
+  console.log("[DEBUG] Запуск уровня 1...");
+
+  // FIX: передаём ТОЛЬКО stage, чтобы Level не получал число вместо объекта Player
+  setTimeout(() => {
+    this._sceneManager.toGameScene(1);
+  }, 10);
 };

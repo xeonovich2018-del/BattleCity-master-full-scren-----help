@@ -1,74 +1,89 @@
-// src/ControlsMenu.js
-// Меню настройки клавиш
+function ControlsScene(sceneManager) {
+  this._sceneManager = sceneManager;
+  this._eventManager = this._sceneManager.getEventManager();
+  this._eventManager.addSubscriber(this, [Keyboard.Event.KEY_PRESSED]);
 
-var ControlsMenu = {};
+  this._actions = [
+    { name: "ВВЕРХ",     action: "up" },
+    { name: "ВНИЗ",      action: "down" },
+    { name: "ВЛЕВО",     action: "left" },
+    { name: "ВПРАВО",    action: "right" },
+    { name: "ВЫСТРЕЛ",   action: "fire" }
+  ];
 
-ControlsMenu.show = function() {
-    if (document.getElementById('controls-menu')) return;
+  this._selected = 0;
+  this._rebinding = false;
+  this._rebindingAction = null;
 
-    var menu = document.createElement('div');
-    menu.id = 'controls-menu';
-    menu.style.cssText = `
-        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        background: rgba(0,0,0,0.95); color: #ff0; padding: 30px; border: 5px solid #ff0;
-        font-family: monospace; font-size: 18px; text-align: center; z-index: 10000;
-        min-width: 420px; border-radius: 8px;
-    `;
+  Controls.init();
+}
 
-    menu.innerHTML = `
-        <h2 style="margin: 0 0 20px 0; color:#ff0;">НАСТРОЙКА УПРАВЛЕНИЯ</h2>
-        <p style="margin-bottom: 20px;">Кликни по действию и нажми новую клавишу</p>
-        <div id="menu-list" style="text-align:left; display:inline-block;"></div>
-        <div style="margin-top:25px;">
-            <button id="reset-btn" style="padding:8px 16px; margin:5px;">Сбросить на стандартные</button>
-            <button id="close-btn" style="padding:8px 16px; margin:5px;">Закрыть (P)</button>
-        </div>
-    `;
-
-    document.body.appendChild(menu);
-
-    var list = document.getElementById('menu-list');
-
-    function addRow(label, action) {
-        var currentKey = Controls.getKey(action);
-        var row = document.createElement('div');
-        row.style.cssText = 'margin:12px 0; cursor:pointer; padding:6px;';
-        row.innerHTML = `<strong>${label}:</strong> <span style="background:#222; padding:6px 14px;">${Controls.getKeyName(currentKey)}</span>`;
-        
-        row.onclick = function() {
-            var span = row.querySelector('span');
-            span.textContent = 'Нажми клавишу...';
-            
-            var temp = function(e) {
-                Controls.current[action] = e.which;
-                Controls.save();
-                span.textContent = Controls.getKeyName(e.which);
-                document.removeEventListener('keydown', temp);
-            };
-            document.addEventListener('keydown', temp);
-        };
-        list.appendChild(row);
-    }
-
-    addRow('Вверх',    'up');
-    addRow('Вниз',     'down');
-    addRow('Влево',    'left');
-    addRow('Вправо',   'right');
-    addRow('Выстрел',  'fire');
-
-    document.getElementById('reset-btn').onclick = function() {
-        Object.assign(Controls.current, Controls.DEFAULT);
-        Controls.save();
-        menu.remove();
-        ControlsMenu.show();
-    };
-
-    document.getElementById('close-btn').onclick = function() {
-        menu.remove();
-    };
+ControlsScene.prototype.notify = function (event) {
+  if (event.name == Keyboard.Event.KEY_PRESSED) {
+    this.keyPressed(event.key);
+  }
 };
 
-// Глобальная функция для вызова из TankController
-ControlsMenu.getKey = function(action) {
-    return Controls.getKey(action);
+ControlsScene.prototype.keyPressed = function (keyCode) {
+  if (this._rebinding) {
+    Controls.current[this._rebindingAction] = keyCode;
+    Controls.save();
+    this._rebinding = false;
+    this._rebindingAction = null;
+    return;
+  }
+
+  if (keyCode == Keyboard.Key.UP) {
+    this._selected = Math.max(0, this._selected - 1);
+  }
+  else if (keyCode == Keyboard.Key.DOWN) {
+    this._selected = Math.min(this._actions.length - 1, this._selected + 1);
+  }
+  else if (keyCode == Keyboard.Key.FIRE || keyCode == Keyboard.Key.START) {
+    this._rebinding = true;
+    this._rebindingAction = this._actions[this._selected].action;
+  }
+  else if (keyCode == Keyboard.Key.SELECT) {
+    // ←←← ВАЖНО: возвращаемся с arrived = true
+    this._sceneManager.toMainMenuScene(true);
+  }
+};
+
+ControlsScene.prototype.update = function () {};
+
+ControlsScene.prototype.draw = function (ctx) {
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+  ctx.font = "16px prstart";
+  ctx.fillStyle = "#ffffff";
+  ctx.textBaseline = "top";
+
+  ctx.fillText("НАСТРОЙКИ УПРАВЛЕНИЯ", 72, 64);
+
+  for (var i = 0; i < this._actions.length; i++) {
+    var y = 138 + i * 36;
+    var action = this._actions[i];
+
+    if (i === this._selected) {
+      ctx.fillStyle = "#ffff00";
+      ctx.fillRect(90, y - 4, 340, 28);
+      ctx.fillStyle = "#000000";
+    } else {
+      ctx.fillStyle = "#ffffff";
+    }
+
+    ctx.fillText(action.name, 120, y);
+
+    var keyName = Controls.getKeyName(Controls.getKey(action.action));
+    ctx.fillText(keyName, 320, y);
+  }
+
+  if (this._rebinding) {
+    ctx.fillStyle = "#ff0000";
+    ctx.fillText("НАЖМИ НОВУЮ КЛАВИШУ...", 98, 380);
+  } else {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("↑↓ — ВЫБОР    SPACE — ИЗМЕНИТЬ    SELECT — В МЕНЮ", 38, 380);
+  }
 };

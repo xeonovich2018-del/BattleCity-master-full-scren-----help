@@ -23,7 +23,7 @@
   
   <!-- === Наши новые файлы для настраиваемых клавиш === -->
   <script type="text/javascript" src="src/Controls.js"></script>
-  <script type="text/javascript" src="src/ControlsMenu.js"></script>
+  <!-- <script type="text/javascript" src="src/ControlsMenu.js"></script> -->   <!-- временно закомментировал (DOM-меню вызывает баг) -->
 
   <script type="text/javascript" src="src/BulletFactory.js"></script>
   <script type="text/javascript" src="src/Bullet.js"></script>
@@ -95,7 +95,7 @@
   <script type="text/javascript" src="src/StageStatisticsScene.js"></script>
   <script type="text/javascript" src="src/GameOverScene.js"></script>
 
-  <!-- === НОВЫЙ ЭКРАН НАСТРОЕК УПРАВЛЕНИЯ === -->
+  <!-- === НОВЫЙ ЭКРАН НАСТРОЕК УПРАВЛЕНИЯ (canvas) === -->
   <script type="text/javascript" src="src/ControlsScene.js"></script>
 
   <script type="text/javascript" src="src/Player.js"></script>
@@ -123,11 +123,8 @@
       
       var eventManager = new EventManager();
       var keyboard = new Keyboard(eventManager);
-      
-      // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
-      // Инициализация настраиваемых клавиш
+
       Controls.init();
-      // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 
       var sceneManager = new SceneManager(eventManager);
       sceneManager.toLoadingScene();
@@ -146,31 +143,63 @@
         return canvas.getContext('2d');
       };
 
-      // ====================== ПОЛНЫЙ ЭКРАН + ЦЕНТРИРОВАНИЕ ======================
+      // ====================== УЛУЧШЕННЫЙ RESIZE (главный фикс смещения) ======================
       var canvas = document.getElementById(CANVAS_ID);
 
-      function resizeCanvas() {
+      window.resizeCanvas = function resizeCanvas() {
+        // Сбрасываем все стили перед пересчётом
+        canvas.style.position = '';
+        canvas.style.left = '';
+        canvas.style.top = '';
+        canvas.style.transform = '';
+        canvas.style.transformOrigin = '';
+        canvas.style.width = '';
+        canvas.style.height = '';
+
+        // Принудительный reflow
+        void canvas.offsetWidth;
+
         var scaleX = window.innerWidth / Globals.CANVAS_WIDTH;
         var scaleY = window.innerHeight / Globals.CANVAS_HEIGHT;
         var scale = Math.min(scaleX, scaleY, 4);
 
-        canvas.style.transform = 'scale(' + scale + ')';
-        canvas.style.transformOrigin = 'top left';
-
         var newWidth = Globals.CANVAS_WIDTH * scale;
         var newHeight = Globals.CANVAS_HEIGHT * scale;
 
-        var offsetX = (window.innerWidth - newWidth) / 2;
-        var offsetY = (window.innerHeight - newHeight) / 2;
+        var offsetX = Math.floor((window.innerWidth - newWidth) / 2);
+        var offsetY = Math.floor((window.innerHeight - newHeight) / 2);
 
         canvas.style.position = 'absolute';
         canvas.style.left = offsetX + 'px';
         canvas.style.top = offsetY + 'px';
-      }
+        canvas.style.transformOrigin = 'top left';
+        canvas.style.transform = 'scale(' + scale + ')';
+        canvas.style.width = Globals.CANVAS_WIDTH + 'px';   // оригинальный размер
+        canvas.style.height = Globals.CANVAS_HEIGHT + 'px';
+      };
 
-      window.addEventListener('resize', resizeCanvas);
-      setTimeout(resizeCanvas, 100);
-      setTimeout(resizeCanvas, 600);
+      // Многоразовый вызов resize при любых изменениях
+      window.addEventListener('resize', window.resizeCanvas);
+      window.addEventListener('load', window.resizeCanvas);
+      
+      // Дополнительные вызовы (на случай DOM-изменений от меню)
+      setTimeout(window.resizeCanvas, 50);
+      setTimeout(window.resizeCanvas, 300);
+      setTimeout(window.resizeCanvas, 800);
+
+      // Делаем #main стабильным контейнером
+      document.getElementById('main').style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+        overflow: hidden;
+      `;
     });
   </script>
 

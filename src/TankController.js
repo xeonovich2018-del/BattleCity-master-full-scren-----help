@@ -1,38 +1,55 @@
 function TankController(eventManager, tank) {
-  SpriteController.call(this, eventManager, tank);
-  this._eventManager.addSubscriber(this, [BaseExplosion.Event.DESTROYED]);
+  this._eventManager = eventManager;
+  this._tank = tank;
   this._active = true;
+
+  this._eventManager.addSubscriber(this, [Keyboard.Event.KEY_PRESSED, Keyboard.Event.KEY_RELEASED]);
 }
 
-TankController.subclass(SpriteController);
-
 TankController.prototype.notify = function (event) {
-  SpriteController.prototype.notify.call(this, event);
-  
-  if (event.name == BaseExplosion.Event.DESTROYED) {
-    this._sprite.stop();
-    this._active = false;
+  if (event.name === Keyboard.Event.KEY_PRESSED) {
+    this.keyPressed(event.key);
+  }
+  else if (event.name === Keyboard.Event.KEY_RELEASED) {
+    this.keyReleased(event.key);
   }
 };
 
 TankController.prototype.keyPressed = function (key) {
-  if (!this._active || !this._sprite.canMove()) {
+  if (!this._active || !this._tank) return;
+
+  // === ВЫСТРЕЛ ===
+  if (key === Controls.getKey('fire') || key === Keyboard.Key.SPACE) {
+    this._tank.shoot();
     return;
   }
 
-  // === Выстрел ===
-  if (key === ControlsMenu.getKey('fire') || key === Keyboard.Key.SPACE) {
-    this._sprite.shoot();
-    return;
+  // === ДВИЖЕНИЕ — вызываем startMoving() КАЖДЫЙ кадр, пока клавиша зажата ===
+  if (key === Controls.getKey('up')) {
+    this._tank.turnUp();
+    this._tank.startMoving();
   }
-
-  // === Пауза / Меню настроек ===
-  if (key === ControlsMenu.getKey('pause') || key === 80) {   // 80 = P
-    ControlsMenu.show();
-    if (typeof togglePause === 'function') togglePause();
-    return;
+  else if (key === Controls.getKey('down')) {
+    this._tank.turnDown();
+    this._tank.startMoving();
   }
+  else if (key === Controls.getKey('left')) {
+    this._tank.turnLeft();
+    this._tank.startMoving();
+  }
+  else if (key === Controls.getKey('right')) {
+    this._tank.turnRight();
+    this._tank.startMoving();
+  }
+};
 
-  // === Движение (передаём дальше в SpriteController) ===
-  SpriteController.prototype.keyPressed.call(this, key);
+TankController.prototype.keyReleased = function (key) {
+  if (!this._tank) return;
+
+  if (key === Controls.getKey('up') ||
+      key === Controls.getKey('down') ||
+      key === Controls.getKey('left') ||
+      key === Controls.getKey('right')) {
+    this._tank.stopMoving();
+  }
 };

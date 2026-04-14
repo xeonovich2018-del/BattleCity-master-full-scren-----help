@@ -47,6 +47,7 @@ MainMenuScene.prototype.updatePosition = function () {
 MainMenuScene.prototype.arrived = function () {
   this._y = 0;
   this._cursor.makeVisible();
+  this._mainMenuController.activate();
 };
 
 MainMenuScene.prototype.update = function () {
@@ -55,10 +56,6 @@ MainMenuScene.prototype.update = function () {
 };
 
 MainMenuScene.prototype.draw = function (ctx) {
-  // === ТОЛЬКО ШРИФТ И ЦВЕТ — без textBaseline, чтобы пункты меню не смещались ===
-  ctx.font = "16px prstart";
-  ctx.fillStyle = "#ffffff";
-
   this._clearCanvas(ctx);
   ctx.drawImage(ImageManager.getImage('battle_city'), 56, this._y + 80);
   
@@ -66,7 +63,6 @@ MainMenuScene.prototype.draw = function (ctx) {
   
   ctx.drawImage(ImageManager.getImage('roman_one_white'), 36, this._y + 32);
   ctx.fillText("-    00", 50, this._y + 46);
-  
   ctx.fillText("HI- 20000", 178, this._y + 46);
   
   ctx.drawImage(ImageManager.getImage('namcot'), 176, this._y + 352);
@@ -107,7 +103,7 @@ MainMenuScene.prototype._clearCanvas = function (ctx) {
   ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 };
 
-// ====================== ПУНКТ МЕНЮ "CONTROLS" ======================
+// ====================== CONTROLS ======================
 function ControlsMenuItem(sceneManager) {
   this._sceneManager = sceneManager;
 }
