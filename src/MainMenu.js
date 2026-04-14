@@ -38,3 +38,20 @@ MainMenu.prototype.getItemsInfo = function () {
   
   return result;
 };
+
+// ====================== НОВЫЙ ПУНКТ МЕНЮ ======================
+// Добавлено: Controls сразу под Construction
+
+function ControlsItem() {}
+
+ControlsItem.prototype.getName = function() {
+    return "CONTROLS";
+};
+
+ControlsItem.prototype.execute = function() {
+    if (typeof ControlsMenu !== "undefined" && typeof ControlsMenu.show === "function") {
+        ControlsMenu.show();
+    } else {
+        console.error("ControlsMenu не найден. Убедись, что файл ControlsMenu.js подключён.");
+    }
+};

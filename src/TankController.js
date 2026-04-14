@@ -19,9 +19,19 @@ TankController.prototype.keyPressed = function (key) {
   if (!this._active || !this._sprite.canMove()) {
     return;
   }
-  SpriteController.prototype.keyPressed.call(this, key);
-  
-  if (key == Keyboard.Key.SPACE) {
+
+  // === Стрельба ===
+  if (key === ControlsMenu.getKey('fire') || key === Keyboard.Key.SPACE) {
     this._sprite.shoot();
+    return;                    // важно: не передаём дальше, чтобы не было двойного срабатывания
   }
+
+  // === Пауза ===
+  if (key === ControlsMenu.getKey('pause')) {
+    if (typeof togglePause === 'function') togglePause();
+    return;
+  }
+
+  // === Движение (передаём в SpriteController) ===
+  SpriteController.prototype.keyPressed.call(this, key);
 };

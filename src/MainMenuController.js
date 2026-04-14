@@ -16,6 +16,11 @@ MainMenuController.prototype.keyPressed = function (key) {
     return;
   }
   
+  // Если открыто меню Controls — игнорируем навигацию главного меню
+  if (document.getElementById('controls-menu')) {
+    return;
+  }
+
   if (key == Keyboard.Key.SELECT) {
     this._menu.nextItem();
   }

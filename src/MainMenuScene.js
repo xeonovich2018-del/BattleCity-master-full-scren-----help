@@ -9,7 +9,8 @@ function MainMenuScene(sceneManager) {
   this._mainMenu = new MainMenu();
   this._mainMenu.setItems([
     new OnePlayerMenuItem(this._sceneManager),
-    new ConstructionMenuItem(this._sceneManager)
+    new ConstructionMenuItem(this._sceneManager),
+    new ControlsMenuItem(this._sceneManager)   // Controls меню
   ]);
   
   this._mainMenuController = new MainMenuController(this._eventManager, this._mainMenu);
@@ -100,4 +101,22 @@ MainMenuScene.prototype.nextMenuItem = function () {
 MainMenuScene.prototype._clearCanvas = function (ctx) {
   ctx.fillStyle = "#000000";
   ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+};
+
+// ====================== НОВЫЙ ПУНКТ МЕНЮ "CONTROLS" ======================
+
+function ControlsMenuItem(sceneManager) {
+    this._sceneManager = sceneManager;
+}
+
+ControlsMenuItem.prototype.getName = function() {
+    return "CONTROLS";
+};
+
+ControlsMenuItem.prototype.execute = function() {
+    if (typeof ControlsMenu !== "undefined" && typeof ControlsMenu.show === "function") {
+        ControlsMenu.show();
+    } else {
+        console.error("ControlsMenu не найден. Убедись, что файл ControlsMenu.js подключён.");
+    }
 };
